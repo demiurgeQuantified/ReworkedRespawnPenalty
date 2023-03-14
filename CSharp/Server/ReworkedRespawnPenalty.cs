@@ -91,7 +91,7 @@ namespace ReworkedRespawnPenalty {
         private void FromFile()
         {
             var doc = XMLExtensions.TryLoadXml(GetFilename());
-            if (doc.Root == null) return;
+            if (doc?.Root == null) return;
             foreach (var characterElement in doc.Root.Elements())
             {
                 var charId = characterElement.Attribute("identifier");
