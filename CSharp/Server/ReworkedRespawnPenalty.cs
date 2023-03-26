@@ -15,6 +15,7 @@ namespace ReworkedRespawnPenalty {
         private const float RepeatedDeathSkillDecay = 5;
         
         private Dictionary<int, Dictionary<Identifier, float>> predeathData = new();
+        private bool boostSuspended = false;
         
         public ReworkedRespawnPenaltyMod() {
             GameMain.LuaCs.Hook.Patch("Barotrauma.CharacterInfo", "IncreaseSkillLevel",
@@ -37,11 +38,23 @@ namespace ReworkedRespawnPenalty {
                 FromFile();
                 return null;
             });
+            GameMain.LuaCs.Hook.Patch("Barotrauma.Abilities.CharacterAbilityGainSimultaneousSkill", "ApplyEffect",
+                (_,_) =>
+                {
+                    boostSuspended = true;
+                    return null;
+                });
+            GameMain.LuaCs.Hook.Patch("Barotrauma.Abilities.CharacterAbilityGainSimultaneousSkill", "ApplyEffect",
+                (_,_) =>
+                {
+                    boostSuspended = false;
+                    return null;
+                }, LuaCsHook.HookMethodType.After);
         }
         
         private void IncreaseSkillLevel(CharacterInfo self, LuaCsHook.ParameterTable args)
         {
-            if (self.Job == null || self.Character is not { IsPlayer: true } || self.Character.CharacterHealth.GetAffliction("reaperstax") != null) return;
+            if (boostSuspended || self.Job == null || self.Character is not { IsPlayer: true } || self.Character.CharacterHealth.GetAffliction("reaperstax") != null) return;
 
             if (!predeathData.TryGetValue(self.GetIdentifier(), out Dictionary<Identifier, float>? deathData)) return;
 
