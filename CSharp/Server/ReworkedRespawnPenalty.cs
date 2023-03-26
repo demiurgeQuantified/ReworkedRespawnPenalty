@@ -38,23 +38,11 @@ namespace ReworkedRespawnPenalty {
                 FromFile();
                 return null;
             });
-            GameMain.LuaCs.Hook.Patch("Barotrauma.Abilities.CharacterAbilityGainSimultaneousSkill", "ApplyEffect",
-                (_,_) =>
-                {
-                    boostSuspended = true;
-                    return null;
-                });
-            GameMain.LuaCs.Hook.Patch("Barotrauma.Abilities.CharacterAbilityGainSimultaneousSkill", "ApplyEffect",
-                (_,_) =>
-                {
-                    boostSuspended = false;
-                    return null;
-                }, LuaCsHook.HookMethodType.After);
         }
         
         private void IncreaseSkillLevel(CharacterInfo self, LuaCsHook.ParameterTable args)
         {
-            if (boostSuspended || self.Job == null || self.Character is not { IsPlayer: true } || self.Character.CharacterHealth.GetAffliction("reaperstax") != null) return;
+            if ((bool)args["gainedFromAbility"] || self.Job == null || self.Character is not { IsPlayer: true } || self.Character.CharacterHealth.GetAffliction("reaperstax") != null) return;
 
             if (!predeathData.TryGetValue(self.GetIdentifier(), out Dictionary<Identifier, float>? deathData)) return;
 
@@ -78,8 +66,7 @@ namespace ReworkedRespawnPenalty {
                 preDeathStats[skill.Identifier] = skill.Level;
             }
             
-            Dictionary<Identifier, float>? previousData;
-            if (predeathData.TryGetValue(characterInfo.GetIdentifier(), out previousData))
+            if (predeathData.TryGetValue(characterInfo.GetIdentifier(), out Dictionary<Identifier, float>? previousData))
             {
                 foreach (var (k, v) in preDeathStats)
                 {
