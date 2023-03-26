@@ -43,14 +43,14 @@ namespace ReworkedRespawnPenalty {
         {
             if (self.Job == null || self.Character is not { IsPlayer: true } || self.Character.CharacterHealth.GetAffliction("reaperstax") != null) return;
 
-            Dictionary<Identifier, float>? deathData;
-            if (!predeathData.TryGetValue(self.GetIdentifier(), out deathData)) return;
+            if (!predeathData.TryGetValue(self.GetIdentifier(), out Dictionary<Identifier, float>? deathData)) return;
 
-            var skillIdentifier = (Identifier)args["skillIdentifier"];
+            Identifier skillIdentifier = (Identifier)args["skillIdentifier"];
+            float skillGap = deathData[skillIdentifier] - self.Job.GetSkillLevel(skillIdentifier);
 
-            if (self.Job.GetSkillLevel(skillIdentifier) < deathData[skillIdentifier])
+            if (skillGap > 0f)
             {
-                args["increase"] = (float)args["increase"] * PostDeathSkillMult;
+                args["increase"] = (float)args["increase"] + skillGap * (PostDeathSkillMult - 1);
             }
         }
 
