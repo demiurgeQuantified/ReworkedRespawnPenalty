@@ -15,8 +15,7 @@ namespace ReworkedRespawnPenalty {
         private const float RepeatedDeathSkillDecay = 5;
         
         private Dictionary<int, Dictionary<Identifier, float>> predeathData = new();
-        private bool boostSuspended = false;
-        
+
         public ReworkedRespawnPenaltyMod() {
             GameMain.LuaCs.Hook.Patch("Barotrauma.CharacterInfo", "IncreaseSkillLevel",
                 (self, args) => {
@@ -51,16 +50,17 @@ namespace ReworkedRespawnPenalty {
             float previousLevel = deathData[skillIdentifier];
 
             if (skillLevel > previousLevel) return;
-            
+
+            float increase = (float)args["increase"];
             float skillGap = skillLevel + (float)args["increase"] - deathData[skillIdentifier];
 
             if (skillGap > 0f)
             {
-                args["increase"] = (float)args["increase"] + skillGap * (PostDeathSkillMult - 1f);
+                args["increase"] = increase + (increase - skillGap) * (PostDeathSkillMult - 1f);
             }
             else
             {
-                args["increase"] = (float)args["increase"] * PostDeathSkillMult;
+                args["increase"] = increase * PostDeathSkillMult;
             }
         }
 
