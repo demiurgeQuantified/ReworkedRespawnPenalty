@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Collections.Generic;
 using Barotrauma;
 using Barotrauma.IO;
-using Barotrauma.Networking;
 
 // ReSharper disable CheckNamespace
 
@@ -27,6 +26,7 @@ namespace ReworkedRespawnPenalty {
                     ReduceCharacterSkills((CharacterInfo)args["characterInfo"]);
                     return null;
                 });
+
             GameMain.LuaCs.Hook.Patch("Barotrauma.MultiPlayerCampaign", "SavePlayers",
                 (_, args) => {
                     ToFile();
