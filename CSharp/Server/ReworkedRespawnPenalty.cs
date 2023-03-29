@@ -14,6 +14,7 @@ namespace ReworkedRespawnPenalty {
         private const float RepeatedDeathSkillDecay = 5;
         
         private Dictionary<int, Dictionary<Identifier, float>> predeathData = new();
+        private bool lastSkillGainWasMultiplied;
 
         public ReworkedRespawnPenaltyMod() {
             GameMain.LuaCs.Hook.Patch("Barotrauma.CharacterInfo", "IncreaseSkillLevel",
@@ -25,6 +26,13 @@ namespace ReworkedRespawnPenalty {
                 (_, args) => {
                     ReduceCharacterSkills((CharacterInfo)args["characterInfo"]);
                     return null;
+                });
+
+            GameMain.LuaCs.Hook.Patch("Barotrauma.Abilities.CharacterAbilityGainSimultaneousSkill", "ApplyEffect",
+                (_, args) => {
+                    if (lastSkillGainWasMultiplied && args["abilityObject"] is AbilitySkillGain abilitySkillGain) {
+                        abilitySkillGain.Value = Math.Max(abilitySkillGain.Value / RepeatedDeathSkillDecay, 1f);
+                    }
                 });
 
             GameMain.LuaCs.Hook.Patch("Barotrauma.MultiPlayerCampaign", "SavePlayers",
@@ -41,6 +49,7 @@ namespace ReworkedRespawnPenalty {
         
         private void IncreaseSkillLevel(CharacterInfo self, LuaCsHook.ParameterTable args)
         {
+            lastSkillGainWasMultiplied = false;
             if ((bool)args["gainedFromAbility"] || self.Job == null || self.Character is not { IsPlayer: true } || self.Character.CharacterHealth.GetAffliction("reaperstax") != null) return;
 
             if (!predeathData.TryGetValue(self.GetIdentifier(), out Dictionary<Identifier, float>? deathData)) return;
@@ -62,6 +71,7 @@ namespace ReworkedRespawnPenalty {
             {
                 args["increase"] = increase * PostDeathSkillMult;
             }
+            lastSkillGainWasMultiplied = true;
         }
 
         private void ReduceCharacterSkills(CharacterInfo characterInfo)
