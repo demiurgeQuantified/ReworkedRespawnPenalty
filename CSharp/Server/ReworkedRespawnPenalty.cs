@@ -47,11 +47,20 @@ namespace ReworkedRespawnPenalty {
             if (!predeathData.TryGetValue(self.GetIdentifier(), out Dictionary<Identifier, float>? deathData)) return;
 
             Identifier skillIdentifier = (Identifier)args["skillIdentifier"];
-            float skillGap = deathData[skillIdentifier] - self.Job.GetSkillLevel(skillIdentifier);
+            float skillLevel = self.Job.GetSkillLevel(skillIdentifier);
+            float previousLevel = deathData[skillIdentifier];
+
+            if (skillLevel > previousLevel) return;
+            
+            float skillGap = skillLevel + (float)args["increase"] - deathData[skillIdentifier];
 
             if (skillGap > 0f)
             {
-                args["increase"] = (float)args["increase"] + skillGap * (PostDeathSkillMult - 1);
+                args["increase"] = (float)args["increase"] + skillGap * (PostDeathSkillMult - 1f);
+            }
+            else
+            {
+                args["increase"] = (float)args["increase"] * PostDeathSkillMult;
             }
         }
 
